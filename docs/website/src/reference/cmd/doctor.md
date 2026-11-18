@@ -35,14 +35,7 @@ entries accuses itself rather than shipping quietly.
 
 **Live retention counts.** How much is in each memory tier right now.
 
-## `--mcp`
-
-The default run does not start other programs. `contexere doctor --mcp` does, once
-per server from the same list as `contexere carry list`. For each one
-it sends the MCP `initialize` handshake and `tools/list`, then prints one line:
-reachable with a tool count, failed with the reason, or skipped because a key it
-needs is not set. A server that does not answer is stopped after a few seconds.
-Nothing is written, and environment and header values are not printed.
+`contexere doctor --mcp` asks each configured MCP server whether it answers, with a short timeout per server. The default run does not start them. Nothing is written, and environment and header values are not printed.
 
 ## What it does not check
 

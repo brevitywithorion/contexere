@@ -39,16 +39,7 @@ changelog-nya menuduh dirinya sendiri, bukan terkirim diam-diam.
 **Hitungan retensi terkini.** Berapa banyak yang ada di setiap tingkat ingatan
 saat ini.
 
-## `--mcp`
-
-Jalannya yang biasa tidak menjalankan program lain. `contexere doctor --mcp`
-melakukannya, sekali per server dari daftar yang sama dengan
-`contexere carry list`. Untuk masing-masing ia mengirim handshake
-MCP `initialize` dan `tools/list`, lalu mencetak satu baris: terjangkau dengan
-jumlah perkakas, gagal dengan alasannya, atau dilewati karena sebuah kunci yang
-ia butuhkan belum disetel. Server yang tidak menjawab dihentikan setelah
-beberapa detik. Tidak ada yang ditulis, dan nilai env serta header tidak
-dicetak.
+`contexere doctor --mcp` menanyakan setiap server MCP yang dikonfigurasi apakah ia menjawab, dengan batas waktu singkat per server. Jalannya yang biasa tidak menjalankannya. Tidak ada yang ditulis, dan nilai env serta header tidak dicetak.
 
 ## Yang tidak ia periksa
 

@@ -31,8 +31,16 @@ serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["preserve_order"] }
 
 # MCP Server  
-rmcp = { version = "3.9", features = ["server", "transport-io"] }
-tokio = { version = "1", features = ["rt-multi-thread", "macros", "sync"] }
+# `client` speaks the handshake. HTTP is our `StreamableHttpClient`: the SDK's
+# reqwest backend measured 17.3 MiB and failed the 15 MiB gate (#1095).
+rmcp = { version = "3.9", features = [
+    "server",
+    "transport-io",
+    "client",
+    "transport-child-process",
+    "transport-streamable-http-client",
+] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "sync", "time"] }
 
 # Database (SQLite bundled — no system dep)
 rusqlite = { version = "0.41", features = ["bundled", "fallible_uint"] }
@@ -59,11 +67,14 @@ colored = "2"
 # Config (TOML DSL filters)
 toml = "0.8"
 
-# HTTPS for `doctor --mcp` (#1095). Header values have to be presented to the
-# server and must not be placed on a command line, so the TLS handshake lives
-# in-process. The cleartext HTTP framing is ours; this is only the TLS layer.
-rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12"] }
-webpki-roots = "1"
+# Types the SDK's HTTP transport uses in its public trait and does not re-export.
+http = "1"
+futures-core = { version = "0.3", default-features = false }
+sse-stream = "0.2"
+# ring, not aws-lc: aws-lc measured 19.5 MiB. System roots, not the embedded
+# webpki bundle, keep the CI binary under 15 MiB.
+rustls = { version = "0.23", default-features = false, features = ["ring", "std"] }
+rustls-native-certs = "0.8"
 
 # Misc
 strsim = "0.11"
