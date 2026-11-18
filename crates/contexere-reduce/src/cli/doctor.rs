@@ -13,6 +13,7 @@ const FLAGS: super::Flags = &[
         "--detail",
         "Print every integration row, not just the ones needing attention",
     ),
+    ("--mcp", "Check that each configured MCP server answers"),
 ];
 
 fn print_help() {
@@ -22,7 +23,7 @@ fn print_help() {
         "doctor".bold().yellow()
     );
     println!("\n{}", "USAGE:".bold().bright_white());
-    println!("  contexere doctor {}", "[--fix]".cyan());
+    println!("  contexere doctor {}", "[--fix] [--mcp]".cyan());
 
     println!("\n{}", "DESCRIPTION:".bold().bright_white());
     println!("  Checks the health of your Contexere installation, including:");
@@ -31,6 +32,7 @@ fn print_help() {
     println!("  • Claude Code hook installation");
     println!("  • MCP server registration");
     println!("  • Filter trust and loading status");
+    println!("  • Configured MCP servers, with --mcp");
     super::print_flags(FLAGS);
     println!();
 
@@ -69,6 +71,9 @@ pub struct DoctorJson {
     /// review (#367); dropped, `--json` reported them healthy.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub warnings: Vec<String>,
+    /// Present only for `doctor --mcp`. One row per configured server (#1095).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mcp: Option<Vec<super::mcp_probe::McpJson>>,
 }
 
 #[derive(serde::Serialize)]
@@ -212,12 +217,15 @@ fn run_json(args: &[String]) -> anyhow::Result<()> {
         fix_available = true;
     }
 
+    let mcp = mcp_report(args, &mut all_ok)
+        .map(|results| results.iter().map(|row| row.to_json()).collect());
     let output = DoctorJson {
         version: "1".to_string(),
         healthy: all_ok,
         checks,
         fix_available,
         warnings,
+        mcp,
     };
 
     println!("{}", serde_json::to_string_pretty(&output)?);
@@ -582,6 +590,13 @@ pub fn run(args: &[String]) -> anyhow::Result<()> {
         )
     );
 
+    // Off unless asked: starting someone else's server has side effects, and the
+    // default doctor stays a local read (#1095).
+    if let Some(results) = mcp_report(args, &mut all_ok) {
+        println!("\n {}", "MCP Servers:".bold().bright_white());
+        print!("{}", super::mcp_probe::render(&results));
+    }
+
     if !any_agent_ok {
         warnings.push(
             "No agent integrations are configured. Run `contexere init` to set up hooks + MCP for your agent."
@@ -618,6 +633,28 @@ pub fn run(args: &[String]) -> anyhow::Result<()> {
     println!();
 
     Ok(())
+}
+
+/// `None` when `--mcp` was not passed, so `--json` omits the field and nothing
+/// is started. A server that does not answer marks the run as needing attention;
+/// a skipped key does not, because the line already says which key is missing.
+fn mcp_report(args: &[String], all_ok: &mut bool) -> Option<Vec<super::mcp_probe::McpResult>> {
+    if !super::has_flag(args, "--mcp") {
+        return None;
+    }
+    let servers = crate::agents::all_integrations()
+        .iter()
+        .filter_map(|host| {
+            let (path, key) = host.mcp_config()?;
+            Some(super::carry::targets_for(host.name(), &path, key))
+        })
+        .flatten()
+        .collect::<Vec<_>>();
+    let results = super::mcp_probe::probe(&servers, crate::guard::limits::MCP_SERVER_TIMEOUT);
+    if results.iter().any(super::mcp_probe::McpResult::failed) {
+        *all_ok = false;
+    }
+    Some(results)
 }
 
 #[cfg(test)]
@@ -739,6 +776,17 @@ mod tests {
             "  MCP tools:      2 of 25 advertised to claude_code \
              (OMNI_MCP_TOOLS=all restores the rest)"
         );
+    }
+
+    #[test]
+    fn mcp_is_an_accepted_flag_and_stays_off_the_default_run() {
+        let mcp = ["contexere", "doctor", "--mcp"]
+            .into_iter()
+            .map(str::to_string)
+            .collect::<Vec<_>>();
+        assert!(super::super::check_flags("doctor", &mcp, super::FLAGS).is_ok());
+        let plain = ["contexere".to_string(), "doctor".to_string()];
+        assert!(super::mcp_report(&plain, &mut true).is_none());
     }
 
     /// With the override on, it is not offered as a remedy.

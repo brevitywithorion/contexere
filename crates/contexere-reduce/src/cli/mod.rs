@@ -8,6 +8,7 @@ pub mod engram;
 pub mod exec;
 pub mod goal;
 pub mod init;
+pub mod mcp_probe;
 
 pub mod patterns;
 pub mod query;

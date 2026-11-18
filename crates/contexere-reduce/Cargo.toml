@@ -59,6 +59,12 @@ colored = "2"
 # Config (TOML DSL filters)
 toml = "0.8"
 
+# HTTPS for `doctor --mcp` (#1095). Header values have to be presented to the
+# server and must not be placed on a command line, so the TLS handshake lives
+# in-process. The cleartext HTTP framing is ours; this is only the TLS layer.
+rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12"] }
+webpki-roots = "1"
+
 # Misc
 strsim = "0.11"
 schemars = "1.2.1"

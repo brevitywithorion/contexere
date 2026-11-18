@@ -5,6 +5,7 @@ Memeriksa bahwa pemasangannya sehat, dan memperbaiki yang bisa ia perbaiki.
 ```sh
 contexere doctor
 contexere doctor --fix
+contexere doctor --mcp
 ```
 
 Ia mencakup versi dan keterjangkauan binary-nya, direktori konfigurasi dan basis
@@ -17,6 +18,7 @@ data, pemasangan hook per host, pendaftaran server MCP, dan pemuatan sinyal.
 | `--fix` | Perbaiki masalah konfigurasi dan integrasi secara otomatis |
 | `--detail` | Cetak semua baris integrasi, bukan hanya yang perlu perhatian |
 | `--json` | Bisa dibaca mesin |
+| `--mcp` | Periksa apakah setiap server MCP yang dikonfigurasi menjawab |
 | `--help`, `-h` | Bantuan |
 
 ## Membaca keluarannya
@@ -36,6 +38,17 @@ changelog-nya menuduh dirinya sendiri, bukan terkirim diam-diam.
 
 **Hitungan retensi terkini.** Berapa banyak yang ada di setiap tingkat ingatan
 saat ini.
+
+## `--mcp`
+
+Jalannya yang biasa tidak menjalankan program lain. `contexere doctor --mcp`
+melakukannya, sekali per server dari daftar yang sama dengan
+`contexere carry list`. Untuk masing-masing ia mengirim handshake
+MCP `initialize` dan `tools/list`, lalu mencetak satu baris: terjangkau dengan
+jumlah perkakas, gagal dengan alasannya, atau dilewati karena sebuah kunci yang
+ia butuhkan belum disetel. Server yang tidak menjawab dihentikan setelah
+beberapa detik. Tidak ada yang ditulis, dan nilai env serta header tidak
+dicetak.
 
 ## Yang tidak ia periksa
 

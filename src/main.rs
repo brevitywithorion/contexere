@@ -27,7 +27,9 @@ fn detect_mode(args: &[String]) -> Mode {
     for a in &args[1..] {
         match a.as_str() {
             "--hook" | "--post-hook" => return Mode::PostHook,
-            "--mcp" => return Mode::Mcp,
+            // Hosts start the server with `contexere --mcp`. A later `--mcp`,
+            // as in `doctor --mcp`, belongs to that subcommand (#1095).
+            "--mcp" if args.get(1).is_some_and(|arg| arg == "--mcp") => return Mode::Mcp,
             "--session-start" | "--before-agent-start" => return Mode::SessionStart,
             "--pre-compact" => return Mode::PreCompact,
             "--pre-hook" => return Mode::PreHook,

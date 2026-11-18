@@ -5,6 +5,7 @@ Checks that the installation is healthy, and repairs what it can.
 ```sh
 contexere doctor
 contexere doctor --fix
+contexere doctor --mcp
 ```
 
 It covers the binary's version and accessibility, the configuration directory and
@@ -17,6 +18,7 @@ database, hook installation per host, MCP server registration, and signal loadin
 | `--fix` | Repair configuration and integration issues automatically |
 | `--detail` | Print every integration row, not only the ones needing attention |
 | `--json` | Machine readable |
+| `--mcp` | Ask each configured MCP server whether it answers |
 | `--help`, `-h` | Help |
 
 ## Reading the output
@@ -32,6 +34,15 @@ is no such line. This exists so a binary that was tagged without moving the chan
 entries accuses itself rather than shipping quietly.
 
 **Live retention counts.** How much is in each memory tier right now.
+
+## `--mcp`
+
+The default run does not start other programs. `contexere doctor --mcp` does, once
+per server from the same list as `contexere carry list`. For each one
+it sends the MCP `initialize` handshake and `tools/list`, then prints one line:
+reachable with a tool count, failed with the reason, or skipped because a key it
+needs is not set. A server that does not answer is stopped after a few seconds.
+Nothing is written, and environment and header values are not printed.
 
 ## What it does not check
 

@@ -12,6 +12,11 @@ pub const MIN_SECRET_RUN: usize = 16;
 /// can hold it open long after the command is done (#1037 review).
 pub const STDERR_DRAIN: std::time::Duration = std::time::Duration::from_secs(2);
 
+/// How long `doctor --mcp` waits for one configured server before killing it.
+/// Long enough for a local process to finish the handshake, short enough that
+/// one hung server cannot stall the command (#1095).
+pub const MCP_SERVER_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(5);
+
 /// Hard ceiling on what either hook path hands back. Shared so both paths cut at
 /// the same size (#219). Cut with `truncate_with_marker`, never a bare
 /// `safe_truncate`: this is the last step, so it has to say what it removed.
